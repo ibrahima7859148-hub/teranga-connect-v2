@@ -1,0 +1,26 @@
+name: Import files
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack zip files
+        run: |
+          shopt -s nullglob
+          files=(*.zip)
+          if [ ${#files[@]} -eq 0 ]; then echo "No zip found"; exit 1; fi
+          for f in "${files[@]}"; do
+            unzip -o "$f" -x ".github/*"
+            rm "$f"
+          done
+      - name: Commit
+        run: |
+          git config user.name teranga-bot
+          git config user.email teranga-bot@users.noreply.github.com
+          git add -A
+          git commit -m "Import files from zip" || echo "Nothing to commit"
+          git push
